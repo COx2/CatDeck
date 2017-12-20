@@ -5,7 +5,18 @@
 
 // ------
 
-CatDeckAudioProcessor::CatDeckAudioProcessor() { // construtor
+CatDeckAudioProcessor::CatDeckAudioProcessor() 
+#ifndef JucePlugin_PreferredChannelConfigurations
+	: AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+		.withInput("Input", AudioChannelSet::stereo(), true)
+#endif
+		.withOutput("Output", AudioChannelSet::stereo(), true)
+#endif
+	)
+#endif
+{ // construtor
 }
 
 CatDeckAudioProcessor::~CatDeckAudioProcessor() { // destructor
@@ -37,6 +48,15 @@ bool CatDeckAudioProcessor::producesMidi() const {
 #endif
 }
 
+bool CatDeckAudioProcessor::isMidiEffect() const
+{
+#if JucePlugin_IsMidiEffect
+	return true;
+#else
+	return false;
+#endif
+}
+
 // ------
 
 void CatDeckAudioProcessor::prepareToPlay( double sampleRate, int samplesPerBlock ) {
@@ -50,21 +70,26 @@ void CatDeckAudioProcessor::releaseResources() {
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool CatDeckAudioProcessor::setPreferredBusArrangement( bool isInput, int bus, const AudioChannelSet& preferredSet ) {
-  // Reject any bus arrangements that are not compatible with your plugin
-
-  const int numChannels = preferredSet.size();
-
+bool CatDeckAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
+{
 #if JucePlugin_IsMidiEffect
-  if ( numChannels != 0 ) { return false; }
-#elif JucePlugin_IsSynth
-  if ( isInput || ( numChannels != 1 && numChannels != 2 ) ) { return false; }
+	ignoreUnused(layouts);
+	return true;
 #else
-  if ( numChannels != 1 && numChannels != 2 ) { return false; }
-  if ( !AudioProcessor::setPreferredBusArrangement ( !isInput, bus, preferredSet ) ) { return false; }
+	// This is the place where you check if the layout is supported.
+	// In this template code we only support mono or stereo.
+	if (layouts.getMainOutputChannelSet() != AudioChannelSet::mono()
+		&& layouts.getMainOutputChannelSet() != AudioChannelSet::stereo())
+		return false;
+
+	// This checks if the input layout matches the output layout
+#if ! JucePlugin_IsSynth
+	if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
+		return false;
 #endif
 
-  return AudioProcessor::setPreferredBusArrangement( isInput, bus, preferredSet );
+	return true;
+#endif
 }
 #endif
 

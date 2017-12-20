@@ -8,47 +8,53 @@ public:
   CatDeckAudioProcessor();
   ~CatDeckAudioProcessor();
   
-  // ------
-  
-  AudioPlayHead::CurrentPositionInfo currentPosition;
-  AudioPlayer audioPlayer;
+  //==============================================================================
+  AudioProcessorEditor* createEditor() override;
+  bool hasEditor() const override;
 
-  // ------
-
-  const String getName() const override;
-  double getTailLengthSeconds() const override;
-  int getNumPrograms() override;
-  int getCurrentProgram() override;
-  void setCurrentProgram( int index ) override;
-  const String getProgramName( int index ) override;
-  void changeProgramName( int index, const String& newName ) override;
-
-  bool acceptsMidi() const override;
-  bool producesMidi() const override;
-
-  // ------
-
-  void prepareToPlay( double sampleRate, int samplesPerBlock ) override;
+  //==============================================================================
+  void prepareToPlay(double sampleRate, int samplesPerBlock) override;
   void releaseResources() override;
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-  bool setPreferredBusArrangement( bool isInput, int bus, const AudioChannelSet& preferredSet ) override;
+  bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
 #endif
 
-  void processBlock( AudioSampleBuffer&, MidiBuffer& ) override;
+  void processBlock(AudioSampleBuffer&, MidiBuffer&) override;
+
+  //==============================================================================
+  AudioProcessorEditor* createEditor() override;
+  bool hasEditor() const override;
+
+  //==============================================================================
+  const String getName() const override;
+
+  bool acceptsMidi() const override;
+  bool producesMidi() const override;
+  bool isMidiEffect() const override;
+  double getTailLengthSeconds() const override;
+
+  //==============================================================================
+  int getNumPrograms() override;
+  int getCurrentProgram() override;
+  void setCurrentProgram(int index) override;
+  const String getProgramName(int index) override;
+  void changeProgramName(int index, const String& newName) override;
+
+  //==============================================================================
+  void getStateInformation(MemoryBlock& destData) override;
+  void setStateInformation(const void* data, int sizeInBytes) override;
+
+
+  // ------
   
   bool isCurrentPositionValid();
 
   // ------
-
-  bool hasEditor() const override;
-  AudioProcessorEditor* createEditor() override;
-
-  // ------
-
-  void getStateInformation( MemoryBlock& destData ) override;
-  void setStateInformation( const void* data, int sizeInBytes ) override;
-
+  
+  AudioPlayHead::CurrentPositionInfo currentPosition;
+  AudioPlayer audioPlayer;
+  
   // ------
 
   Waveform waveformMacro;
